@@ -1,0 +1,9 @@
+# Ignore components that we are pulling in via composer
+
+jquery/*
+jquery-ui/*
+bootstrap/*
+underscore/*
+font-awesome/*
+require*
+
