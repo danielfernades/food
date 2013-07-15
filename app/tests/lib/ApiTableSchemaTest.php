@@ -17,6 +17,17 @@ class ApiTableSchemaTest extends TestCase
         DB::setDefaultConnection($this->defaultConnection);
     }
 
+    public function getFieldData()
+    {
+        return array(
+            array('id', 'name', 'id'),
+            array('id', 'fillable', False),
+            array('text1', 'display', 'Text1'),
+            array('text1', 'fillable', True),
+            array('oid', 'display', 'Object Identifier'),
+        );
+    }
+
     public function testCreateDB()
     {
         $this->assertEquals('test', DB::connection()->getName());
@@ -24,17 +35,28 @@ class ApiTableSchemaTest extends TestCase
         $this->assertTrue(Schema::hasTable('foo'));
     }
 
-    public function testGetFields()
+    public function testGetFieldsReturnsFieldNames()
     {
         $schema = new ApiTableSchema(new TestFoo);
         $fields = $schema->getFields();
         $this->assertArrayHasKey('code', $fields);
-        $this->assertEquals('id', $fields['id']['name']);
-        $this->assertFalse($fields['id']['fillable']);
-        $this->assertEquals('Text1', $fields['text1']['display']);
-        $this->assertTrue($fields['text1']['fillable']);
-        $this->assertContains('required', $fields['code']['rules']);
-        $this->assertEquals('Object Identifier', $fields['oid']['display']);
+    }
+
+    /**
+     * @dataProvider getFieldData
+     */
+    public function testGetFieldData($field, $attr, $expected)
+    {
+        $schema = new ApiTableSchema(new TestFoo);
+        $fields = $schema->getFields();
+        $this->assertEquals($expected, $fields[$field][$attr]);
+    }
+
+    public function testRequiredFields()
+    {
+        $schema = new ApiTableSchema(new TestFoo);
+        $fields = $schema->getFields();
+        $this->assertContains('required', $fields['code']['rules']);        
     }
 
     public function testGetIndexFields()
@@ -49,5 +71,6 @@ class ApiTableSchemaTest extends TestCase
         // $schema = new ApiTableSchema(new TestFoo);
         // var_dump($schema->getIndexFields());
     }
+
 }
 
