@@ -15,14 +15,12 @@ class ApiTableSchema
     protected $fieldCache;
     protected $userSchema;
     protected $schemaManager;
-    protected $ruleGenerator;
     protected $userAttributes;
 
-    public function __construct($model, $controller = Null, $ruleGenerator = Null)
+    public function __construct($model, $controller = Null)
     {
         $this->model = $model;
         $this->schemaManager = DB::connection()->getDoctrineSchemaManager();
-        $this->ruleGenerator = $ruleGenerator ?: new ApiValidationRuleGenerator;
         $this->userSchema = array();
         $this->userAttributes = array('controller' => $controller);
     }
@@ -99,7 +97,7 @@ class ApiTableSchema
             if (isset($schema[$colName])) {
                 $attributes = array_merge($attributes, $schema[$colName]);
             }
-            $attributes['rules'] = $this->ruleGenerator->getColumnRules($tableName, $colName, $attributes['rules']);
+            $attributes['rules'] = ValidationRuleGenerator::getRules($tableName, $colName, $attributes['rules']);
 
             $fields[$colName] = $attributes;
         }
@@ -236,7 +234,7 @@ class ApiTableSchema
         foreach( $fields as $field ) {
             if ($field['fillable']) {
                 if ($id) {
-                    $rules[$field['name']] = $this->ruleGenerator->getUniqueRules($field['rules'], $id);
+                    $rules[$field['name']] = ValidationRuleGenerator::getUniqueRules($field['rules'], $id);
                 } else {
                     $rules[$field['name']] = $field['rules'];
                 }                

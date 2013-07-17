@@ -4,6 +4,8 @@
 	"keywords": ["framework", "laravel"],
 	"require": {
 		"laravel/framework": "4.0.*",
+        "kalani/validation-rule-generator": "dev-master",
+        "bllim/datatables": "dev-master",
 
         "robloach/component-installer": "dev-master",
         "components/jquery": "dev-master",

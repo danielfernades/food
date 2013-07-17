@@ -13,7 +13,10 @@
 
 Route::get('/', function()
 {
-	return View::make('hello');
+    var_dump(ValidationRuleGenerator::getRules());
+    $v = ValidationRuleGenerator::getRules();
+    var_dump($v);
+	// return View::make('hello');
 });
 
 Route::resource('data-derivation-codes', 'DataDerivationCodesController');
