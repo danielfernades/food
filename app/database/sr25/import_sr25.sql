@@ -1,4 +1,6 @@
 -- Create a database to hold the USDA data file
+-- Data comes from https://www.ars.usda.gov/Services/docs.htm?docid=22771
+-- (direct link): https://www.ars.usda.gov/SP2UserFiles/Place/12354500/Data/SR25/dnload/sr25.zip
 -- To import this file, start mysql client with --local-infile[=1]
 
 drop table if exists nutrient_data;
@@ -20,7 +22,8 @@ create table nutrient_data (
     up_eb decimal(18,5) default null comment 'Upper 95% error bound.',
     stat_cmt char(7) default null comment 'Statistical comments.',
     addmod_date date default null comment 'Indicates when a value was either added to the database or last modified.',
-    cc char(0) default null comment 'Confidence Code indicating data quality, based on evaluation of sample plan, sample handling, analytical method, analytical quality control, and number of samples analyzed. Not included in this release, but is planned for future releases.'
+    cc char(0) default null comment 'Confidence Code indicating data quality, based on evaluation of sample plan, sample handling, analytical method, analytical quality control, and number of samples analyzed. Not included in this release, but is planned for future releases.',
+    PRIMARY KEY (ndb_no, nutr_no)
 );
 
 load data local infile 'NUT_DATA.txt' into table nutrient_data
@@ -71,7 +74,8 @@ create table nutrient_definition
     tagname VARCHAR(10) NOT NULL comment 'International Network of Food Data Systems (INFOODS) Tagnames.. A unique abbreviation for a nutrient/food component developed by INFOODS to aid in the interchange of data.',
     nutrdesc VARCHAR(34) NOT NULL comment 'Name of nutrient/food component.',
     num_dec  CHAR(1) NOT NULL comment 'Number of decimal places to which a nutrient value is rounded.', 
-    sr_order SMALLINT(5) UNSIGNED NOT NULL comment 'Used to sort nutrient records in the same order as various reports produced from SR.'
+    sr_order SMALLINT(5) UNSIGNED NOT NULL comment 'Used to sort nutrient records in the same order as various reports produced from SR.',
+    PRIMARY KEY (nutr_no)
 );
 
 load data local infile 'NUTR_DEF.txt' into table nutrient_definition
@@ -82,7 +86,8 @@ drop table if exists source_code;
 create table source_code 
 (
     src_cd CHAR(2) NOT NULL comment '2-digit code.',
-    srccd_desc VARCHAR(60) NOT NULL comment 'Description of source code th at identifies the type of nutrient data.'
+    srccd_desc VARCHAR(60) NOT NULL comment 'Description of source code th at identifies the type of nutrient data.',
+    PRIMARY KEY (src_cd)
 ); 
 
 load data local infile 'SRC_CD.txt' into table source_code
@@ -93,7 +98,8 @@ drop table if exists data_derivation_code;
 create table data_derivation_code 
 (
     deriv_cd VARCHAR(4) NOT NULL comment 'Derivation Code.',
-    deriv_desc varchar(263) NOT NULL comment 'Description of derivation code giving specific information on how the value was determined.'
+    deriv_desc varchar(263) NOT NULL comment 'Description of derivation code giving specific information on how the value was determined.',
+    PRIMARY KEY (deriv_cd)
 ); 
 
 load data local infile 'DERIV_CD.txt' into table data_derivation_code
@@ -109,7 +115,8 @@ create table weight
     msre_desc VARCHAR(77) NOT NULL comment 'Description (for example, cup, diced, and 1-inch pieces).',
     gm_wgt SMALLINT UNSIGNED NOT NULL comment 'Gram weight.',
     num_data_pts smallint unsigned comment 'Number of data points.',
-    std_dev decimal(9,4) comment 'Standard deviation.'
+    std_dev decimal(9,4) comment 'Standard deviation.',
+    PRIMARY KEY (ndb_no, seq)
 ); 
 
 load data local infile 'WEIGHT.txt' into table weight 
@@ -135,7 +142,8 @@ create table footnote
     footnt_no TINYINT(2) UNSIGNED ZEROFILL NOT NULL comment 'Sequence number. If a given footnote applies to more than one nutrient number, the same footnote number is used. As a result,this file cannot be indexed. ',
     footnt_typ CHAR(1) NOT NULL comment 'Type of footnote: D = footnote adding information to the food description; M = footnote adding information to measure description; N = footnote providing additional information on a nutrient value. If the Footnt_typ = N, th e Nutr_No will also be filled in.',
     nutr_no SMALLINT(3) UNSIGNED default null comment 'Unique 3-digit identifier code for a nutrient to which footnote applies.',
-    footnt_txt VARCHAR(199) NOT NULL comment 'Footnote text.'
+    footnt_txt VARCHAR(199) NOT NULL comment 'Footnote text.',
+    PRIMARY KEY (ndb_no, footnt_no)
 ); 
 load data local infile 'FOOTNOTE.txt' into table footnote 
     fields terminated by '\^' enclosed by '~' 
@@ -154,7 +162,8 @@ create table data_sources_link
 (
     ndb_no MEDIUMINT(5) UNSIGNED NOT NULL comment '5-digit Nutrient Databank number.',
     nutr_no SMALLINT(3) UNSIGNED NOT NULL comment 'Unique 3-digit identifier code for a nutrient.',
-    datasrc_id CHAR(5) NOT NULL comment 'Unique ID identifying the reference/source.'
+    datasrc_id CHAR(5) NOT NULL comment 'Unique ID identifying the reference/source.',
+    PRIMARY KEY (ndb_no, nutr_no, datasrc_id)
 ); 
 
 load data local infile 'DATSRCLN.txt' into table data_sources_link 
@@ -172,7 +181,8 @@ create table data_sources
     vol_city VARCHAR(16) comment 'Volume number for journal articles, books, or reports; city where sponsoring organi zation is located. ',
     issue_state CHAR(3) comment 'Issue number for journal article; State where the sponsoring organization is located.',
     start_page smallint comment 'Starting page number of article/document.',
-    end_page smallint comment 'Ending page number of article/document.'
+    end_page smallint comment 'Ending page number of article/document.',
+    PRIMARY KEY (datasrc_id)
 ); 
 
 load data local infile 'DATA_SRC.txt' into table data_sources 
@@ -213,7 +223,8 @@ create table food_desc
     n_factor decimal(18,4) comment 'Factor for converting nitrogen to protein',
     pro_factor decimal(18,4) comment 'Factor for calculating calories from protein',
     fat_factor decimal(18,4) comment 'Factor for calculating calories from fat',
-    cho_factor decimal(18,4) comment 'Factor for calculating calories from carbohydrate'
+    cho_factor decimal(18,4) comment 'Factor for calculating calories from carbohydrate',
+    PRIMARY KEY (ndb_no)
 ); 
 
 load data local infile 'FOOD_DES.txt' into table food_desc 
@@ -247,7 +258,8 @@ drop table if exists food_grp_desc;
 create table food_grp_desc 
 (
     fdgrp_cd SMALLINT(4) UNSIGNED NOT NULL comment '4-digit code identifying a food group. Only the first 2 digits are currently assigned. In the future, the last 2 digits may be used. Codes may not be consecutive.',
-    fdgrp_desc VARCHAR(33) NOT NULL comment 'Name of food group.'
+    fdgrp_desc VARCHAR(33) NOT NULL comment 'Name of food group.',
+    PRIMARY KEY (fdgrp_cd)
 ); 
 
 load data local infile 'FD_GROUP.txt' into table food_grp_desc 
@@ -258,7 +270,8 @@ drop table if exists langual_factor;
 create table langual_factor 
 (
     ndb_no SMALLINT(5) UNSIGNED NOT NULL comment '5-digit Nutrient Databank number that uniquely identifies a food item. If this field is defined as numeric, the leading zero will be lost.',
-    factor_code CHAR(5) NOT NULL comment 'The LanguaL factor from the Thesaurus'
+    factor_code CHAR(5) NOT NULL comment 'The LanguaL factor from the Thesaurus',
+    PRIMARY KEY (ndb_no,factor_code)
 ); 
 
 load data local infile 'LANGUAL.txt' into table langual_factor fields terminated by '\^' enclosed by '~' LINES TERMINATED BY '\r\n';
@@ -267,7 +280,8 @@ drop table if exists langual_fact_desc;
 create table langual_fact_desc 
 (
     factor_code CHAR(5) NOT NULL comment 'The LanguaL factor from the Thesaurus. Only those codes used to factor the foods contained in the LanguaL Factor file are included in this file',
-    description VARCHAR(66) NOT NULL comment 'The description of the LanguaL Factor Code from the thesaurus'
+    description VARCHAR(66) NOT NULL comment 'The description of the LanguaL Factor Code from the thesaurus',
+    PRIMARY KEY (factor_code)
 ); 
 
 load data local infile 'LANGDESC.txt' into table langual_fact_desc 
